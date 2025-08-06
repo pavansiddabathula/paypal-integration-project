@@ -78,3 +78,42 @@ This project demonstrates how to integrate PayPal's payment processing capabilit
 1. Clone the repository:
    ```bash
    git clone https://github.com/pavansiddabathula/paypal-integration-project.git
+
+
+
+
+Tech Stack
+Backend: Java, Spring Boot, Spring MVC
+Microservices:
+Eureka Service Registry
+Feign Client
+RestTemplate
+Database: MySQL
+Cache: Redis
+API Documentation: Postman Collections
+Cloud: AWS EC2, RDS, Secrets Manager
+Security: OAuth 2.0 (Client Credentials)
+Build Tool: Maven
+Version Control: Git, GitHub
+Testing: JUnit, Mockito
+Microservices Overview
+paypal-provider-service: Integrates with PayPal APIs to manage orders.
+paypal-processing-service: Handles payment processing and reconciliation.
+eureka-service-registry: Manages service discovery for microservices.
+Standard PayPal Checkout Flow
+Buyer clicks "Pay with PayPal" on the client application.
+Front-end calls paypal-processing-service to initiate payment.
+Processing service requests order creation from paypal-provider-service.
+Provider service calls PayPal Orders API (Create Order).
+Buyer logs in to PayPal and approves the payment.
+Processing service calls provider service to capture payment.
+Provider service calls PayPal Orders API (Capture Order).
+Status is updated in the database (success/failure).
+If not completed in 30 minutes, the system marks payment as failed.
+API Flow Example
+Create Payment
+Endpoint: POST /api/payments/create
+Description: Calls PayPal API to create an order and returns the approval URL to the front-end.
+Capture Payment
+Endpoint: POST /api/payments/capture
+Description: Captures the order after buyer approval, updates the database, and triggers reconciliation.
