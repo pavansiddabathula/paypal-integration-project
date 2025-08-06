@@ -80,7 +80,7 @@ This project demonstrates how to integrate PayPal's payment processing capabilit
    git clone https://github.com/pavansiddabathula/paypal-integration-project.git
 
 
-
+## Architecture
 
 Tech Stack
 Backend: Java, Spring Boot, Spring MVC
