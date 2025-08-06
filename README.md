@@ -68,5 +68,4 @@ This project demonstrates how to integrate PayPal's payment processing capabilit
 To get a copy of this project on your local machine, run:
 
 ```bash
-git clone https://github.com/pavansiddabathula/paypal-integration-project.git
-S
+git clone https://github.com/pavansiddabathula/paypal-integration-project
