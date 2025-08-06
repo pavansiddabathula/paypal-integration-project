@@ -11,8 +11,6 @@ It follows a **Microservices Architecture** with three services:
 The system ensures **secure, fault-tolerant, and scalable** payment processing with reconciliation logic and a **30-minute pending payment window**.
 
 ---
-# PayPal Integration Project
-
 ## Description
 
 This project demonstrates how to integrate PayPal's payment processing capabilities into a Java-based microservices architecture. It includes services for handling payment processing, order creation, and reconciliation with PayPal's APIs.
@@ -67,4 +65,4 @@ This project demonstrates how to integrate PayPal's payment processing capabilit
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/pavansiddabathula/paypal-integration-project.git
+   git clone https://github.com/pavansiddabathula/paypal-integration-project
