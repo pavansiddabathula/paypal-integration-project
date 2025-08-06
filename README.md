@@ -64,8 +64,9 @@ This project demonstrates how to integrate PayPal's payment processing capabilit
 - **Endpoint**: `POST /api/payments/capture`
 - **Description**: Captures the order after buyer approval, updates the database, and triggers reconciliation.
 
-## Installation Instructions
+## 📥 Clone Repository
+To get a copy of this project on your local machine, run:
 
-1. Clone the repository:
-   ```bash
-   [git clone https://github.com/pavansiddabathula/paypal-integration-project](https://github.com/pavansiddabathula/paypal-integration-project)
+```bash
+git clone https://github.com/pavansiddabathula/paypal-integration-project.git
+S
