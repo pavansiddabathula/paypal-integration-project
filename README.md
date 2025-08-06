@@ -11,6 +11,9 @@ It follows a **Microservices Architecture** with three services:
 The system ensures **secure, fault-tolerant, and scalable** payment processing with reconciliation logic and a **30-minute pending payment window**.
 
 ---
+
+## 🏗 Architecture
+![PayPal Checkout Flow](assets/Screenshot%202025-08-06%20175421.png)
 ## Description
 
 This project demonstrates how to integrate PayPal's payment processing capabilities into a Java-based microservices architecture. It includes services for handling payment processing, order creation, and reconciliation with PayPal's APIs.
