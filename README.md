@@ -50,6 +50,7 @@ This section explains how the PayPal Standard Checkout flow works in a successfu
    > 💬 “Payment Complete!”
 
    The entire success flow is handled by the paypal-provider-service
+   To know more about the paypal-provider-service, please refer to paypal-integration-project/paypal-provider-service/README.md for detailed information.
 
 ---
 
@@ -91,21 +92,9 @@ This setup ensures that:
 - No payment gets missed or forgotten.
 - Customers aren't wrongly shown as unpaid.
 - The system is reliable, even if PayPal takes time or something goes wrong during the initial step.
+For additional insights into the paypal-processing-service, check out paypal-integration-project/paypal-processing-service/README.md.
 
 ---
-
-### 📌 Summary
-
-| Scenario            | Handled By                  | Status in DB     |
-|---------------------|-----------------------------|------------------|
-| Success Immediately | `paypal-provider-service`   | ✅ Completed      |
-| Pending / Failed    | `paypal-processing-service` | 🔄 Processing / ❌ Failed |
-
-
-
-> 📝 This flow ensures a secure, smooth, and trackable payment process for both the customer and the business.
-
-
 ## 🖼️ Flow Diagram
 
 ![PayPal Checkout Flow](assets/Screenshot%202025-08-06%20175421.png)
@@ -127,10 +116,15 @@ This setup ensures that:
 | Testing          | JUnit, Mockito                             |
 
 ---
+## 📁 Repository Structure
 
-## 📊 API Flow Example
+paypal-integration-project/
+├── paypal-provider-service/        # PayPal API integration service
+│   └── README.md                   # Instructions for this service
+├── paypal-processing-service/      # Core payment logic and reconciliation
+│   └── README.md                   # Instructions for this service
+├── eureka-service-registry/        # Service registry
+│   └── README.md                   # Instructions for this service
+├── assets/                         # Diagrams, screenshots
+└── README.md                       # ← You are here
 
-### Create Payment
-
-```http
-POST /api/payments/create
