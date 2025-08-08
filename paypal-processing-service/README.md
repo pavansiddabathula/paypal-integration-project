@@ -2,7 +2,7 @@
 
 The `paypal-processing-service` is a core microservice in our payment infrastructure. It ensures accurate transaction state management after a user initiates a payment using PayPal. It performs **background reconciliation**, **order status checks**, and **auto-captures payments** when required — ensuring all PayPal transactions reach a final state of either `SUCCESS` or `FAILURE`.
 
-To improve fault tolerance and maintain system resilience, we have implemented a Circuit Breaker using the @CircuitBreaker annotation from the Resilience4j library. This helps gracefully handle failures in downstream services (e.g., PayPal APIs or database operations), and fallback logic ensures that partial failures do not cascade across the system.
+To improve fault tolerance and maintain system resilience, we have implemented a **Circuit Breaker** using the @CircuitBreaker annotation from the Resilience4j library. This helps gracefully handle failures in downstream services (e.g., PayPal APIs or database operations), and fallback logic ensures that partial failures do not cascade across the system.
 
 ---
 
