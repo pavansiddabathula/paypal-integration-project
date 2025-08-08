@@ -7,9 +7,11 @@ The `paypal-processing-service` is a core microservice in our payment infrastruc
 ## 🌐 Purpose
 
 - Processes transactions left in `PROCESSING` state.
-- Recovers from missed capture calls due to network delays or unexpected errors.
+- Handles cases where payment was approved by the customer, but the final **"capture"** step failed due to network issues or server crashes.
+    - 📌 *Capture* is a backend API call that actually deducts money from the customer’s account after they approve the payment.
+    - If this step fails (e.g., due to timeouts or system errors), the transaction stays in an incomplete state.
 - Maintains **data consistency** between PayPal and our internal DB.
-- Ensures that payments are finalized reliably with **retries**, **delays**, and **fallbacks**.
+- Ensures that all payments eventually reach a final state using **scheduled retries** and **fallback logic**.
 
 ---
 
@@ -110,9 +112,13 @@ A scheduled job runs every few minutes to identify and resolve transactions in `
 
 ## ⏱ Retry Strategy
 
-- Each processing transaction is retried up to **3 times** over a **30-minute window**.
-- If still not completed, it is marked as `FAILED`.
-- Helps avoid stuck or indefinite transactions.
+The system attempts to process each transaction **every 10 minutes** within a **30-minute window**.
+
+This provides the customer with a **30-minute timeframe** to complete the payment.
+
+If the transaction is not successfully captured after **3 attempts** (i.e., after 30 minutes), it is marked as **`FAILED`**.
+
+This strategy ensures **timely payment processing** and prevents **indefinite pending states**.
 
 ---
 
@@ -128,8 +134,3 @@ The `paypal-processing-service` ensures reliability in our PayPal integration by
 
 ---
 
-## 👨‍💻 Author
-
-**Siddabathula Pavan Kumar**  
-Java Full Stack Developer  
-[LinkedIn](https://www.linkedin.com/in/siddabathula-pavan-kumar/)
