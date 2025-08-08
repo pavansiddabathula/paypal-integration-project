@@ -61,32 +61,39 @@ We use a **reconciliation scheduler** to recover from this.
 
 ## 🔄 Reconciliation Logic
 
-A scheduled job runs every few minutes to identify and resolve transactions in `PROCESSING` status.
+A scheduled job runs every 10 minutes to identify and resolve transactions stuck in the `PROCESSING` state.
 
 ### Steps Involved:
 
 1. **Fetch Processing Transactions**  
-   - From our database where status = `PROCESSING`.
+   - Select all transactions from the database where status = `PROCESSING`.
 
 2. **Call PayPal `getOrder` API**  
-   - Retrieve the latest status of the PayPal order.
+   - Retrieve the latest status of the PayPal order from PayPal.
 
-3. **Handle Based on Order Status:**
+3. **Handle Based on PayPal Order Status:**
 
    - **PAYER_ACTION_REQUIRED**  
-     The customer hasn't completed the payment.  
-     We wait for a maximum of 30 minutes, retrying up to 3 times. If still not completed, mark as `FAILED`.
+     - This means the customer has not yet completed the payment.  
+     - We **do not take any action** other than logging and monitoring.
+     - We continue checking every 10 minutes.  
+     - If after **3 attempts** (i.e., 30 minutes) the customer still hasn't completed the payment, we mark the transaction as **`FAILED`**.
 
    - **APPROVED**  
-     The customer has approved the payment, but it hasn’t been captured.  
-     We call the `captureOrder` API. If successful, mark the transaction as `SUCCESS`.
+     - The customer has approved the payment, but it hasn't been captured yet.  
+     - We attempt to **capture** the payment using the `captureOrder` API.  
+     - If capture is successful, we mark the transaction as **`SUCCESS`**.  
+     - If capture fails, we retry (up to 3 attempts in total).
 
    - **COMPLETED**  
-     Payment was already captured (possibly by another process).  
-     We mark the transaction as `SUCCESS`.
+     - The payment has already been successfully captured.  
+     - We mark the transaction as **`SUCCESS`** in our database.
 
    - **Any Other Status**  
-     Unexpected or error state — we log and skip for further investigation.
+     - For unexpected or error states, we log the issue and skip the transaction for now to avoid incorrect processing.
+
+4. **Max Retry Check**  
+   - If a transaction has been retried **3 times** without reaching a final state, it is marked as **`FAILED`** to prevent it from remaining in `PROCESSING` indefinitely
 
 ---
 
