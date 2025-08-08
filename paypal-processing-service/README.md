@@ -1,132 +1,135 @@
-# PayPal Provider Service
+# 🧾 PayPal Processing Service
 
-This microservice is responsible for integrating PayPal Standard Checkout into our overall payment system. It acts as a Payment Service Provider (PSP) module and handles all core PayPal-related operations such as order creation, capturing payments, and retrieving order status.
-
----
-
-## 📌 Features
-
-- Integration with PayPal Standard Checkout
-- Implements key PayPal REST APIs:
-  - `createOrder`
-  - `getOrder`
-  - `captureOrder`
-- OAuth 2.0-based authentication
-- Redis caching for token management
-- Designed for scale, reliability, and fault tolerance
+The `paypal-processing-service` is a core microservice in our payment infrastructure. It ensures accurate transaction state management after a user initiates a payment using PayPal. It performs **background reconciliation**, **order status checks**, and **auto-captures payments** when required — ensuring all PayPal transactions reach a final state of either `SUCCESS` or `FAILURE`.
 
 ---
 
-## 🔁 Standard Checkout Flow
+## 🌐 Purpose
 
-1. **Customer initiates a purchase** on the e-commerce platform.
-2. The platform triggers the `createOrder` API to initiate a PayPal transaction.
-3. PayPal presents a hosted checkout page to the customer.
-4. The customer logs in and authorizes payment.
-5. The platform can fetch payment status using the `getOrder` API.
-6. Once authorized, the `captureOrder` API is triggered to finalize and deduct the payment.
-7. Payment is settled to the merchant account after deducting PayPal fees.
-
-🔗 [PayPal Standard Checkout Docs](https://developer.paypal.com/studio/checkout/standard/getstarted)
+- Processes transactions left in `PROCESSING` state.
+- Recovers from missed capture calls due to network delays or unexpected errors.
+- Maintains **data consistency** between PayPal and our internal DB.
+- Ensures that payments are finalized reliably with **retries**, **delays**, and **fallbacks**.
 
 ---
 
-## ⚙️ API Endpoints
+## 💳 PayPal Checkout Flow (Standard)
 
-### 1. `POST /api/paypal/createOrder`
-Creates a new PayPal order and returns a redirect link to the hosted PayPal page.
+We are using **PayPal Standard Checkout** integration.
 
-**Example Request:**  
-POST  
-http://localhost:8081/api/paypal/createOrder
+### 1. User Chooses PayPal Payment Option
 
----
+- User selects PayPal as the payment method during checkout.
 
-### 2. `GET /api/paypal/getOrder/{orderId}`
-Retrieves the current status and details of a given PayPal order.
+### 2. Call `createOrder` API
 
-**Example Request:**  
-GET  
-http://localhost:8081/api/paypal/getOrder/5MN12345GH909123J
+- Our `paypal-provider-service` sends an order creation request to PayPal using the `createOrder` API.
+- A PayPal-hosted payment page URL is returned.
+- **Initial PayPal order status** is: `PAYER_ACTION_REQUIRED`
 
----
+### 3. Customer Completes Payment on PayPal
 
-### 3. `POST /api/paypal/captureOrder/{orderId}`
-Captures the authorized payment from the customer's PayPal account.
+- Customer logs in and authorizes the payment on PayPal.
+- **Order status becomes `APPROVED`**
+  - ⚠️ **Money is not yet deducted from the customer.**
 
-**Example Request:**  
-POST  
-http://localhost:8081/api/paypal/captureOrder/5MN12345GH909123J
+### 4. Call `captureOrder` API (Backend)
 
----
-
-
-## 🔐 OAuth 2.0 Authentication
-
-- We authenticate using PayPal’s OAuth 2.0 token endpoint.
-- The access token is valid for 8 hours.
-- We cache the token in Redis with a TTL of **7 hours 30 minutes**.
-- Once expired, the system automatically re-fetches and stores a new token.
-- This ensures seamless, uninterrupted access to PayPal APIs.
+- We call `captureOrder` (from our backend) to finalize the payment.
+- If successful:
+  - PayPal changes the order status to `COMPLETED`
+  - We mark the transaction as `SUCCESS` in our DB.
 
 ---
 
-## 🧠 Technical Details
+## 🔁 Why Reconciliation Is Needed
 
-- Language: Java
-- Architecture: Microservices
-- External Integration: PayPal REST APIs
-- Token Store: Redis
-- HTTP Client: WebClient / RestTemplate (based on implementation)
-- Rate Limiting / Error Handling: Implemented at API level
+Sometimes the ideal flow breaks due to:
 
----
+- Customer closes the PayPal tab or abandons the payment
+- Network delay or timeout between `APPROVED` and `CAPTURE` API
+- PayPal returns temporary errors
+- Backend service crash or network error
 
-## 🧾 Reference Links
+In such cases, the transaction remains in `PROCESSING` state in our DB.
 
-- [Create Order API](https://developer.paypal.com/docs/api/orders/v2/#orders_create)
-- [Capture Order API](https://developer.paypal.com/docs/api/orders/v2/#orders_capture)
-- [PayPal REST APIs Overview](https://developer.paypal.com/api/rest/)
-- [PayPal Sandbox Login](https://sandbox.paypal.com)
-- [PayPal Developer Dashboard](https://developer.paypal.com/dashboard/)
+We use a **reconciliation scheduler** to recover from this.
 
 ---
 
-## 🧮 Payment System Context
+## 🔄 Reconciliation Logic
 
-This service is part of a larger payment ecosystem, designed to support:
+A scheduled job runs every few minutes to identify and resolve transactions in `PROCESSING` status.
 
-- Multiple Payment Methods: Cards, UPI, Wallets, Net Banking, BNPL
-- Payment Types: One-time (SALE), Subscription (RECC)
-- Hosted Page and Direct Integration
-- Fault-tolerant transaction management
+### Steps Involved:
 
----
+1. **Fetch Processing Transactions**  
+   - From our database where status = `PROCESSING`.
 
-## 📌 Why PayPal?
+2. **Call PayPal `getOrder` API**  
+   - Retrieve the latest status of the PayPal order.
 
-PayPal is a globally trusted Payment Service Provider offering:
+3. **Handle Based on Order Status:**
 
-- High security and fraud protection
-- Seamless global transactions
-- Multi-currency support
-- Easy integration with modern APIs
+   - **PAYER_ACTION_REQUIRED**  
+     The customer hasn't completed the payment.  
+     We wait for a maximum of 30 minutes, retrying up to 3 times. If still not completed, mark as `FAILED`.
 
----
+   - **APPROVED**  
+     The customer has approved the payment, but it hasn’t been captured.  
+     We call the `captureOrder` API. If successful, mark the transaction as `SUCCESS`.
 
-## 📦 Related Services
+   - **COMPLETED**  
+     Payment was already captured (possibly by another process).  
+     We mark the transaction as `SUCCESS`.
 
-- `paypal-processing-service`: Handles reconciliation and payment verification logic
-- `order-service`: Manages customer orders
-- `auth-service`: Centralized authentication across services
-
----
-
-## 🧪 Test it
-
-Use the official [PayPal Sandbox](https://sandbox.paypal.com) to simulate payments and test different flows.
+   - **Any Other Status**  
+     Unexpected or error state — we log and skip for further investigation.
 
 ---
 
+## 🧾 Internal Transaction Statuses (Our System)
 
+| Status     | Meaning                                          |
+|------------|--------------------------------------------------|
+| SUCCESS    | Payment completed and captured successfully      |
+| PROCESSING | Awaiting payment action or capture               |
+| FAILED     | Payment attempt expired, abandoned, or errored   |
 
+---
+
+## 📦 PayPal Order Statuses (External)
+
+| PayPal Status         | Meaning                                      |
+|-----------------------|----------------------------------------------|
+| PAYER_ACTION_REQUIRED | Waiting for customer to complete payment     |
+| APPROVED              | Customer approved, but capture not done yet |
+| COMPLETED             | Payment captured, money deducted             |
+
+---
+
+## ⏱ Retry Strategy
+
+- Each processing transaction is retried up to **3 times** over a **30-minute window**.
+- If still not completed, it is marked as `FAILED`.
+- Helps avoid stuck or indefinite transactions.
+
+---
+
+## 🧠 Summary
+
+The `paypal-processing-service` ensures reliability in our PayPal integration by handling delayed or incomplete payments through scheduled reconciliation. It makes sure no transaction is left unresolved — leading to better consistency, user experience, and system integrity.
+
+---
+
+## 📌 Related Links
+
+- [PayPal Standard Checkout Documentation](https://developer.paypal.com/studio/checkout/standard/getstarted)
+
+---
+
+## 👨‍💻 Author
+
+**Siddabathula Pavan Kumar**  
+Java Full Stack Developer  
+[LinkedIn](https://www.linkedin.com/in/siddabathula-pavan-kumar/)
