@@ -119,12 +119,13 @@ For additional insights into the paypal-processing-service, check out paypal-int
 ## 📁 Repository Structure
 
 paypal-integration-project/
-├── paypal-provider-service/        # PayPal API integration service
-│   └── README.md                   # Instructions for this service
-├── paypal-processing-service/      # Core payment logic and reconciliation
-│   └── README.md                   # Instructions for this service
-├── eureka-service-registry/        # Service registry
-│   └── README.md                   # Instructions for this service
-├── assets/                         # Diagrams, screenshots
-└── README.md                       # ← You are here
 
+paypal-provider-service – PayPal API integration service (create, get, capture orders)
+
+paypal-processing-service – Core logic for payment verification and reconciliation (scheduled job-based)
+
+eureka-service-registry – Service registry to manage microservices
+
+assets – Contains architecture diagrams, flowcharts, and screenshots
+
+README.md – Project overview and usage instructions
