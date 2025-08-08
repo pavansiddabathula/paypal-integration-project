@@ -14,7 +14,7 @@ To improve fault tolerance and maintain system resilience, we have implemented a
     - If this step fails (e.g., due to timeouts or system errors), the transaction stays in an incomplete state.
 - Maintains **data consistency** between PayPal and our internal DB.
 - Ensures that all payments eventually reach a final state using **scheduled retries** and **fallback logic**.
-
+  
 ---
 
 ## 💳 PayPal Checkout Flow (Standard)
