@@ -1,71 +1,136 @@
-# PayPal Integration Project
+# 💳 PayPal Integration Project
 
-## Project Overview
-This project implements a **Payment System** for an e-commerce-like client application, enabling customers to pay securely using **PayPal Standard Checkout**.  
-It follows a **Microservices Architecture** with three services:
+## 🧾 Project Overview
+
+This project is a secure and scalable payment system developed for a client-facing website, where users can complete purchases using PayPal Standard Checkout. Customers can choose PayPal as a payment option during checkout and complete their transaction smoothly.
+
+---
+
+## 🧱 Microservice Architecture
+
+It follows a **Microservices Architecture** 
+This project consists of the following **three microservices**, organized as separate folders in this repository:
 
 1. **paypal-provider-service** – Handles PayPal API calls (Create Order, Capture Order, Get Order).
 2. **paypal-processing-service** – Manages payment flow logic, reconciliation, and database status updates.
 3. **eureka-service-registry** – Registers all services for service discovery.
 
-The system ensures **secure, fault-tolerant, and scalable** payment processing with reconciliation logic and a **30-minute pending payment window**.
+> 📄 **Each service has its own `README.md` file** with detailed setup and implementation instructions.  
+> Browse the respective folder for complete documentation.
 
 ---
 
-## 🔄 Payment System Flow
+# 💳 PayPal Checkout – Success Flow
+
+This section explains how the PayPal Standard Checkout flow works in a successful payment scenario, written in a simple way for anyone to understand — even without technical background.
+
+## ✅ Successful Payment Journey
+
+1. **Customer clicks “Pay with PayPal”**  
+   The customer selects a product/service and clicks the “Pay with PayPal” button on the website.
+
+2. **Order is created on PayPal**  
+   The system sends a secure request to PayPal to create a new order for the selected product or service.
+
+3. **Customer logs in and approves payment**  
+   PayPal opens in a popup or new window. The customer logs into their PayPal account and approves the payment.
+
+4. **System captures the payment**  
+   Once the payment is approved by the customer, the system immediately sends a request to PayPal to **capture** the payment.  
+   > ⚠️ *This step is important: capturing the payment confirms and completes the transaction.*
+
+5. **Capture is successful**  
+   PayPal confirms that the payment has been successfully captured.
+
+6. **System updates payment status**  
+   The system marks the transaction as `SUCCESS` in the database.
+
+7. **Customer sees confirmation**  
+   A success message is shown to the customer — for example:  
+   > 💬 “Payment Complete!”
+
+   The entire success flow is handled by the paypal-provider-service
+
+---
+
+## 🛑 Failed or Incomplete or Is Still in Process?
+
+Sometimes, the payment might not go through immediately. This can happen due to various reasons — the customer closes the window, network issues, PayPal delay, or the capture step fails. Here's how we handle that:
+
+### 🔁 Step-by-Step Flow (Failure or Processing Scenario)
+
+1. The customer clicks **"Pay with PayPal"** and approves the payment.
+
+2. When our system tries to **capture** the payment:
+   - If PayPal doesn't confirm the payment (due to failure or delay),
+   - We **do not mark it as "successful"** in our database right away.
+
+3. Instead, the payment is stored as **"Processing"** or **"Pending"** in our database.
+
+---
+
+## 🛠️ Role of `paypal-processing-service` (Recon System)
+
+We built a second microservice called **`paypal-processing-service`**, which acts like a watchdog to track and update these incomplete payments.
+
+Here's how it works:
+
+- Every few minutes, this service **automatically checks the database** for any payments that are still in "Processing" or "Pending" status.
+  
+- For each such payment:
+  - It sends a fresh request to PayPal to **check the current status**.
+  - If the payment is now **successful**, it updates our database and marks it as "Completed".
+  - If it's still **not successful**, the service will keep checking in future cycles.
+  - If the payment **definitely failed**, it marks the payment as "Failed" and logs the reason.
+
+---
+
+## ✅ Why This Is Important
+
+This setup ensures that:
+- No payment gets missed or forgotten.
+- Customers aren't wrongly shown as unpaid.
+- The system is reliable, even if PayPal takes time or something goes wrong during the initial step.
+
+---
+
+### 📌 Summary
+
+| Scenario            | Handled By                  | Status in DB     |
+|---------------------|-----------------------------|------------------|
+| Success Immediately | `paypal-provider-service`   | ✅ Completed      |
+| Pending / Failed    | `paypal-processing-service` | 🔄 Processing / ❌ Failed |
+
+
+
+> 📝 This flow ensures a secure, smooth, and trackable payment process for both the customer and the business.
+
+
+## 🖼️ Flow Diagram
+
 ![PayPal Checkout Flow](assets/Screenshot%202025-08-06%20175421.png)
-## Description
 
-This project demonstrates how to integrate PayPal's payment processing capabilities into a Java-based microservices architecture. It includes services for handling payment processing, order creation, and reconciliation with PayPal's APIs.
+---
 
-## Tech Stack
+## ⚙️ Tech Stack
 
-- **Backend**: Java, Spring Boot, Spring MVC
-- **Microservices**: 
-  - Eureka Service Registry
-  - Feign Client
-  - RestTemplate
-- **Database**: MySQL
-- **Cache**: Redis
-- **API Documentation**: Postman Collections
-- **Cloud**: AWS EC2, RDS, Secrets Manager
-- **Security**: OAuth 2.0 (Client Credentials)
-- **Build Tool**: Maven
-- **Version Control**: Git, GitHub
-- **Testing**: JUnit, Mockito
+| Category         | Technologies Used                          |
+|------------------|--------------------------------------------|
+| Backend          | Java, Spring Boot, Spring MVC              |
+| Microservices    | Eureka, Feign Client, RestTemplate         |
+| Database         | MySQL                                      |
+| Cache            | Redis (for access tokens & job scheduling) |
+| Cloud            | AWS EC2, RDS, Secrets Manager              |
+| Security         | OAuth 2.0 (Client Credentials Flow)        |
+| Dev Tools        | Maven, Git, GitHub                         |
+| API Testing      | Postman Collections                        |
+| Testing          | JUnit, Mockito                             |
 
-## Microservices Overview
+---
 
-- **paypal-provider-service**: Integrates with PayPal APIs to manage orders.
-- **paypal-processing-service**: Handles payment processing and reconciliation.
-- **eureka-service-registry**: Manages service discovery for microservices.
-
-## Standard PayPal Checkout Flow
-
-1. Buyer clicks "Pay with PayPal" on the client application.
-2. Front-end calls `paypal-processing-service` to initiate payment.
-3. Processing service requests order creation from `paypal-provider-service`.
-4. Provider service calls PayPal Orders API (Create Order).
-5. Buyer logs in to PayPal and approves the payment.
-6. Processing service calls provider service to capture payment.
-7. Provider service calls PayPal Orders API (Capture Order).
-8. Status is updated in the database (success/failure).
-9. If not completed in 30 minutes, the system marks payment as failed.
-
-## API Flow Example
+## 📊 API Flow Example
 
 ### Create Payment
 
-- **Endpoint**: `POST /api/payments/create`
-- **Description**: Calls PayPal API to create an order and returns the approval URL to the front-end.
-
-### Capture Payment
-
-- **Endpoint**: `POST /api/payments/capture`
-- **Description**: Captures the order after buyer approval, updates the database, and triggers reconciliation.
-
-## 📥 Clone Repository
-To get a copy of this project on your local machine, run:
-
-```bash
-git clone https://github.com/pavansiddabathula/paypal-integration-project
+```http
+POST /api/payments/create
