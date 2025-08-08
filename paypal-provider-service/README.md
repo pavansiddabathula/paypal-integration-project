@@ -128,5 +128,53 @@ Use the official [PayPal Sandbox](https://sandbox.paypal.com) to simulate paymen
 
 ---
 
+## 📦 Package Structure - paypal-provider-service
+
+### com.hulkhiretech.payments
+Root package for base-level configurations and shared components.
+
+### com.hulkhiretech.payments.config
+Contains service-wide configuration classes like beans, schedulers, and application properties setup.
+
+### com.hulkhiretech.payments.constants
+Defines constant values used throughout the provider service for better maintainability.
+
+### com.hulkhiretech.payments.controller
+Houses the REST controller classes that handle incoming HTTP requests related to PayPal payments.
+
+### com.hulkhiretech.payments.Exceptions
+Custom exceptions and exception-handling logic.
+
+### com.hulkhiretech.payments.http
+Contains classes that deal with outbound HTTP communication.
+
+### com.hulkhiretech.payments.paypal
+Main package for integrating with PayPal — delegating calls and managing workflows.
+
+### com.hulkhiretech.payments.paypal.req
+Handles request models sent to PayPal APIs.
+
+### com.hulkhiretech.payments.paypal.res
+Handles response models received from PayPal APIs.
+
+### com.hulkhiretech.payments.pojo
+Plain Old Java Objects used across different layers for request and response mapping.
+
+### com.hulkhiretech.payments.service
+High-level service layer responsible for core business logic orchestration.
+
+### com.hulkhiretech.payments.service.helper
+Helper utilities and support classes used internally by services.
+
+### com.hulkhiretech.payments.service.impl
+Concrete implementations of service interfaces.
+
+### com.hulkhiretech.payments.service.interfaces
+Interfaces for business logic to encourage modularity and testing.
+
+### com.hulkhiretech.payments.utils
+General-purpose utility classes used across the project.
+
+
 
 
