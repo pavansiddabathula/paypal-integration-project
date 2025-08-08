@@ -148,6 +148,60 @@ The `paypal-processing-service` ensures reliability in our PayPal integration by
 
 ---
 
+## 📦 Package Structure - paypal-processing-service
+
+### com.hulkhire.payments.config
+Contains configuration classes such as schedulers, circuit breakers, and other service-level configurations.
+
+### com.hulkhire.payments.constants
+Holds application-wide constant values to avoid hardcoded literals.
+
+### com.hulkhire.payments.controller
+REST controllers that expose APIs related to payment processing operations.
+
+### com.hulkhire.payments.dao.impl
+DAO implementation classes responsible for interacting with the database.
+
+### com.hulkhire.payments.dao.interfaces
+DAO interfaces defining contracts for data access operations.
+
+### com.hulkhire.payments.DTO
+Data Transfer Objects used for communication between layers.
+
+### com.hulkhire.payments.entity
+Contains JPA entity classes representing database tables.
+
+### com.hulkhire.payments.exceptions
+Custom exception classes and global exception handlers.
+
+### com.hulkhire.payments.http
+Handles HTTP-related utilities or wrappers used for external communication.
+
+### com.hulkhire.payments.paypal.res
+Represents response models specific to PayPal API responses.
+
+### com.hulkhire.payments.pojo
+General-purpose POJOs used across different layers of the service.
+
+### com.hulkhire.payments.service
+Contains core service logic and high-level orchestration.
+
+### com.hulkhire.payments.service.Helper
+Helper classes that support reusable service logic.
+
+### com.hulkhire.payments.service.impl
+Concrete implementations of service interfaces.
+
+### com.hulkhire.payments.service.interfaces
+Interfaces for the business logic layer, promoting loose coupling.
+
+### com.hulkhire.payments.utils
+Utility classes with static helper methods used throughout the service.
+
+### com.hulkhire.payments.utils.converters
+Handles conversion between DTOs and Entities for mapping purposes.
+
+
 ## 📌 Related Links
 
 - [PayPal Standard Checkout Documentation](https://developer.paypal.com/studio/checkout/standard/getstarted)
