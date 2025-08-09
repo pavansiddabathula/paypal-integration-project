@@ -1,5 +1,6 @@
 # 💳 PayPal Integration Project
 
+
 ## 🧾 Project Overview
 
 This project is a secure and scalable payment system developed for a client-facing website, where users can complete purchases using PayPal Standard Checkout. Customers can choose PayPal as a payment option during checkout and complete their transaction smoothly.
